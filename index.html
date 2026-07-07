@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CFU Calculator Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#101915;
+    --panel:#182420;
+    --line:#2A3B33;
+    --cream:#EFEAE0;
+    --muted:#93A89B;
+    --violet:#9A7BC4;
+    --amber:#D9A441;
+    --red:#C4694E;
+    --green:#7FAE6F;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--cream);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.6;
+    min-height:100vh;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:56px 24px 90px;}
+
+  .top-row{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:8px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px; height:7px; border-radius:50%;
+    background:var(--violet);
+    box-shadow:0 0 0 3px rgba(154,123,196,0.18);
+  }
+  .pro-badge{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    color:var(--bg);
+    background:var(--amber);
+    padding:4px 9px;
+    border-radius:2px;
+    height:fit-content;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:clamp(30px, 5.6vw, 42px);
+    letter-spacing:-0.01em;
+    margin-bottom:14px;
+  }
+  h1 em{font-style:italic; color:var(--amber); font-weight:400;}
+  .sub{color:var(--muted); max-width:56ch; margin-bottom:34px;}
+
+  /* Sample tabs */
+  .tabs{
+    display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:16px;
+  }
+  .tab{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    padding:9px 14px;
+    border-radius:2px;
+    border:1px solid var(--line);
+    color:var(--muted);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--panel);
+    transition:border-color 0.15s, color 0.15s;
+  }
+  .tab:hover{border-color:var(--violet); color:var(--cream);}
+  .tab.active{border-color:var(--amber); color:var(--cream); background:rgba(217,164,65,0.08);}
+  .tab .x{opacity:0.5; font-size:11px;}
+  .tab .x:hover{opacity:1; color:var(--red);}
+  .tab-add{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    padding:9px 14px;
+    border-radius:2px;
+    border:1px dashed var(--amber);
+    color:var(--amber);
+    cursor:pointer;
+    background:none;
+  }
+  .tab-add:hover{background:rgba(217,164,65,0.06);}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:28px;
+    margin-bottom:20px;
+    animation:rise 0.35s ease both;
+  }
+  @keyframes rise{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  .card-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--amber);
+    margin-bottom:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  .field input, .field select{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--line);
+    color:var(--cream);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+    padding:11px 12px;
+    border-radius:2px;
+    outline:none;
+    transition:border-color 0.15s;
+  }
+  .field input:focus, .field select:focus{border-color:var(--violet);}
+  .field input.error{border-color:var(--red);}
+  .field .hint{font-size:11px; color:var(--muted); margin-top:6px; opacity:0.8;}
+  .field .error-text{font-size:11px; color:var(--red); margin-top:6px; display:none;}
+  .field .error-text.show{display:block;}
+  .name-field input{font-family:'IBM Plex Sans', sans-serif; font-size:15px;}
+
+  .unit-toggle{display:flex; gap:8px; margin-bottom:16px;}
+  .unit-opt{
+    flex:1; text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    padding:10px;
+    border:1px solid var(--line);
+    border-radius:2px;
+    cursor:pointer;
+    color:var(--muted);
+  }
+  .unit-opt.active{border-color:var(--violet); color:var(--cream); background:rgba(154,123,196,0.1);}
+
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:520px){ .two-col{grid-template-columns:1fr;} }
+
+  .add-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--amber);
+    background:none;
+    border:1px dashed var(--amber);
+    padding:9px 16px;
+    border-radius:2px;
+    cursor:pointer;
+    opacity:0.85;
+    width:100%;
+    margin-top:6px;
+  }
+  .add-btn:hover{opacity:1; background:rgba(217,164,65,0.06);}
+
+  .plate{padding:16px 0; border-bottom:1px solid var(--line);}
+  .plate:last-of-type{border-bottom:none;}
+  .plate-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
+  .plate-tag{font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted);}
+  .plate-cfu{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--violet);}
+  .plate-grid{display:grid; grid-template-columns:1fr 1fr auto; gap:12px; align-items:start;}
+  @media (max-width:520px){
+    .plate-grid{grid-template-columns:1fr 1fr;}
+    .remove-btn{grid-column:1/-1; justify-self:start;}
+  }
+  .remove-btn{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--red);
+    background:none; border:1px solid var(--red); padding:10px 12px; border-radius:2px;
+    cursor:pointer; opacity:0.75; height:fit-content; margin-top:24px;
+  }
+  .remove-btn:hover{opacity:1;}
+
+  .bars{margin-top:6px;}
+  .bar-row{display:flex; align-items:center; gap:10px; font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); margin-bottom:8px;}
+  .bar-track{flex:1; height:6px; background:var(--line); border-radius:3px; overflow:hidden;}
+  .bar-fill{height:100%; border-radius:3px; background:var(--violet); transition:width 0.4s ease;}
+  .bar-fill.excluded{background:var(--red); opacity:0.5;}
+  .bar-fill.outlier{background:var(--amber);}
+
+  .result{padding-top:4px;}
+  .result-value{font-family:'Fraunces', serif; font-size:38px; color:var(--cream); display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .result-value .unit{font-family:'IBM Plex Mono', monospace; font-size:15px; color:var(--muted);}
+  .result-note{margin-top:10px; font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:var(--muted);}
+  .flags{display:flex; flex-direction:column; gap:8px; margin-top:14px;}
+  .flag{display:inline-block; padding:6px 11px; border-radius:2px; font-family:'IBM Plex Mono', monospace; font-size:11.5px; width:fit-content;}
+  .flag.ok{background:rgba(127,174,111,0.15); color:var(--green); border:1px solid rgba(127,174,111,0.4);}
+  .flag.warn{background:rgba(196,105,78,0.15); color:var(--red); border:1px solid rgba(196,105,78,0.4);}
+  .flag.info{background:rgba(154,123,196,0.15); color:var(--violet); border:1px solid rgba(154,123,196,0.4);}
+
+  .action-row{display:flex; gap:12px; margin-top:22px; flex-wrap:wrap;}
+  .btn{
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; padding:11px 18px; border-radius:2px;
+    border:1px solid var(--line); color:var(--cream); background:none; cursor:pointer;
+    transition:border-color 0.15s, background 0.15s;
+  }
+  .btn:hover{border-color:var(--amber); background:rgba(217,164,65,0.06);}
+  .btn.copied{border-color:var(--green); color:var(--green);}
+  .btn.primary{border-color:var(--violet); color:var(--violet);}
+
+  .formula{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--muted);
+    margin-top:24px; padding-top:20px; border-top:1px solid var(--line); line-height:1.8;
+  }
+  .formula .f{color:var(--cream);}
+
+  /* Comparison table */
+  table{width:100%; border-collapse:collapse; margin-top:6px;}
+  th, td{
+    text-align:left; padding:10px 8px; font-family:'IBM Plex Mono', monospace; font-size:12.5px;
+    border-bottom:1px solid var(--line);
+  }
+  th{color:var(--muted); font-weight:500; font-size:11px; text-transform:uppercase; letter-spacing:0.06em;}
+  td{color:var(--cream);}
+  tr:last-child td{border-bottom:none;}
+
+  footer{text-align:center; font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); margin-top:50px;}
+
+  @media print{
+    .tabs, .add-btn, .action-row, .tab-add{display:none !important;}
+    body{background:#fff; color:#111;}
+    .card{border:1px solid #ccc; background:#fff;}
+    .result-value{color:#111;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top-row">
+    <div class="eyebrow">Lab Tool</div>
+    <div class="pro-badge">PRO</div>
+  </div>
+  <h1>CFU Calculator <em>Pro</em></h1>
+  <p class="sub">Multi-sample colony forming unit calculations with mL/gram unit modes, outlier detection, cross-sample comparison, and CSV/print export — built for running several dilution series in one session.</p>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="card">
+    <div class="card-label">Sample</div>
+    <div class="field name-field">
+      <label>Sample / experiment name</label>
+      <input type="text" id="sampleName" placeholder="e.g. Fish gut isolate — batch 3" oninput="onNameChange()">
+    </div>
+
+    <div class="unit-toggle">
+      <div class="unit-opt" id="unit-ml" onclick="setUnit('ml')">Liquid (CFU/mL)</div>
+      <div class="unit-opt" id="unit-g" onclick="setUnit('g')">Solid (CFU/g)</div>
+    </div>
+
+    <div class="field" style="max-width:260px; margin-bottom:0;">
+      <label id="volumeLabel">Volume plated (mL)</label>
+      <input type="number" id="volume" value="0.1" step="any" min="0" oninput="calculate()">
+      <div class="hint" id="volumeHint">Standard spread plate: 0.1 mL</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">
+      <span>Plates</span>
+      <span class="plate-tag" id="plateCountLabel">0 plates</span>
+    </div>
+    <div id="plates"></div>
+    <button class="add-btn" onclick="addPlate()">+ Add plate</button>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Result</div>
+    <div class="result">
+      <div class="result-value" id="resultValue">— <span class="unit">CFU/mL</span></div>
+      <div class="result-note" id="resultNote">Enter colony counts to calculate.</div>
+      <div class="bars" id="bars"></div>
+      <div class="flags" id="flags"></div>
+      <div class="action-row">
+        <button class="btn" id="copyBtn" onclick="copyResult()">Copy result</button>
+        <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+        <button class="btn" onclick="resetSample()">Reset sample</button>
+      </div>
+    </div>
+    <div class="formula">
+      <div class="f" id="formulaText">CFU/mL = colonies counted ÷ (dilution factor × volume plated)</div>
+      Countable range: 30–300 colonies per plate — excluded from the average otherwise. Plates whose count deviates sharply from the sample median are flagged as statistical outliers even if technically in range.
+    </div>
+  </div>
+
+  <div class="card" id="compareCard" style="display:none;">
+    <div class="card-label">
+      <span>Compare Samples</span>
+      <span class="plate-tag" id="sampleCountLabel"></span>
+    </div>
+    <table id="compareTable"></table>
+    <div class="action-row">
+      <button class="btn primary" onclick="exportCSV()">Export all as CSV</button>
+    </div>
+  </div>
+
+  <footer>Standard spread/pour-plate CFU calculation · 30–300 rule · outlier detection via median deviation</footer>
+</div>
+
+<script>
+let samples = {};
+let sampleOrder = [];
+let currentId = null;
+let plateSeq = 0;
+
+function uid(){ return 's' + (++plateSeq) + '_' + Math.random().toString(36).slice(2,7); }
+
+function newSample(prefill){
+  const id = uid();
+  samples[id] = {
+    id,
+    name: '',
+    unit: 'ml',
+    volume: 0.1,
+    plates: prefill ? [
+      {pid:1, colonies:142, dilution:3},
+      {pid:2, colonies:18, dilution:4}
+    ] : [{pid:1, colonies:null, dilution:3}],
+    nextPid: prefill ? 3 : 2
+  };
+  sampleOrder.push(id);
+  return id;
+}
+
+function initApp(){
+  const first = newSample(true);
+  currentId = first;
+  renderTabs();
+  renderSample();
+}
+
+function addSampleTab(){
+  const id = newSample(false);
+  currentId = id;
+  renderTabs();
+  renderSample();
+}
+
+function switchSample(id){
+  currentId = id;
+  renderTabs();
+  renderSample();
+}
+
+function deleteSample(id, evt){
+  evt.stopPropagation();
+  if(sampleOrder.length <= 1) return;
+  sampleOrder = sampleOrder.filter(s => s !== id);
+  delete samples[id];
+  if(currentId === id) currentId = sampleOrder[0];
+  renderTabs();
+  renderSample();
+}
+
+function renderTabs(){
+  const tabsDiv = document.getElementById('tabs');
+  tabsDiv.innerHTML = '';
+  sampleOrder.forEach((id, i) => {
+    const s = samples[id];
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (id === currentId ? ' active' : '');
+    tab.onclick = () => switchSample(id);
+    tab.innerHTML = `<span>${s.name || 'Sample ' + (i+1)}</span>` + (sampleOrder.length > 1 ? `<span class="x" onclick="deleteSample('${id}', event)">✕</span>` : '');
+    tabsDiv.appendChild(tab);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.className = 'tab-add';
+  addBtn.textContent = '+ New sample';
+  addBtn.onclick = addSampleTab;
+  tabsDiv.appendChild(addBtn);
+}
+
+function onNameChange(){
+  const s = samples[currentId];
+  s.name = document.getElementById('sampleName').value;
+  renderTabs();
+  // reselect active tab styling issue fix: re-render doesn't lose focus badly since input outside tabs
+}
+
+function setUnit(unit){
+  samples[currentId].unit = unit;
+  renderSample();
+}
+
+function renderSample(){
+  const s = samples[currentId];
+  document.getElementById('sampleName').value = s.name;
+  document.getElementById('volume').value = s.volume;
+
+  document.getElementById('unit-ml').classList.toggle('active', s.unit === 'ml');
+  document.getElementById('unit-g').classList.toggle('active', s.unit === 'g');
+
+  if(s.unit === 'ml'){
+    document.getElementById('volumeLabel').textContent = 'Volume plated (mL)';
+    document.getElementById('volumeHint').textContent = 'Standard spread plate: 0.1 mL';
+    document.getElementById('formulaText').textContent = 'CFU/mL = colonies counted ÷ (dilution factor × volume plated)';
+  } else {
+    document.getElementById('volumeLabel').textContent = 'Sample weight plated (g)';
+    document.getElementById('volumeHint').textContent = 'e.g. 1 g of homogenized sample suspension plated';
+    document.getElementById('formulaText').textContent = 'CFU/g = colonies counted ÷ (dilution factor × sample weight)';
+  }
+
+  const platesDiv = document.getElementById('plates');
+  platesDiv.innerHTML = '';
+  s.plates.forEach(p => renderPlateRow(p));
+  updatePlateCountLabel();
+  calculate();
+  renderCompareTable();
+}
+
+function renderPlateRow(p){
+  const platesDiv = document.getElementById('plates');
+  const div = document.createElement('div');
+  div.className = 'plate';
+  div.id = 'plate-' + p.pid;
+  div.innerHTML = `
+    <div class="plate-head">
+      <span class="plate-tag">Plate ${p.pid}</span>
+      <span class="plate-cfu" id="plate-cfu-${p.pid}"></span>
+    </div>
+    <div class="plate-grid">
+      <div class="field" style="margin-bottom:0;">
+        <label>Colonies counted</label>
+        <input type="number" id="colonies-${p.pid}" value="${p.colonies ?? ''}" placeholder="e.g. 142" min="0" step="1" oninput="onPlateChange(${p.pid})">
+        <div class="error-text" id="error-${p.pid}">Enter a whole number ≥ 0</div>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Dilution (10⁻ⁿ)</label>
+        <select id="dilution-${p.pid}" onchange="onPlateChange(${p.pid})">
+          ${[0,1,2,3,4,5,6,7,8].map(n => `<option value="${n}" ${n===p.dilution?'selected':''}>10⁻${n}</option>`).join('')}
+        </select>
+      </div>
+      <button class="remove-btn" onclick="removePlate(${p.pid})">Remove</button>
+    </div>
+  `;
+  platesDiv.appendChild(div);
+}
+
+function addPlate(){
+  const s = samples[currentId];
+  const pid = s.nextPid++;
+  s.plates.push({pid, colonies:null, dilution:3});
+  renderPlateRow(s.plates[s.plates.length-1]);
+  updatePlateCountLabel();
+  calculate();
+}
+
+function removePlate(pid){
+  const s = samples[currentId];
+  s.plates = s.plates.filter(p => p.pid !== pid);
+  const el = document.getElementById('plate-' + pid);
+  if(el) el.remove();
+  updatePlateCountLabel();
+  calculate();
+}
+
+function onPlateChange(pid){
+  const s = samples[currentId];
+  const p = s.plates.find(p => p.pid === pid);
+  const raw = document.getElementById('colonies-' + pid).value;
+  p.colonies = raw === '' ? null : parseFloat(raw);
+  p.dilution = parseInt(document.getElementById('dilution-' + pid).value);
+  calculate();
+}
+
+function updatePlateCountLabel(){
+  const n = samples[currentId].plates.length;
+  document.getElementById('plateCountLabel').textContent = `${n} plate${n===1?'':'s'}`;
+}
+
+function resetSample(){
+  const s = samples[currentId];
+  s.plates = [{pid:1, colonies:142, dilution:3},{pid:2, colonies:18, dilution:4}];
+  s.nextPid = 3;
+  s.volume = 0.1;
+  renderSample();
+}
+
+function computeSampleResult(s){
+  const volume = parseFloat(s.volume) || 0;
+  let validResults = [];
+  let excludedResults = [];
+
+  s.plates.forEach(p => {
+    if(p.colonies === null || p.colonies === undefined || isNaN(p.colonies)) return;
+    if(!Number.isInteger(p.colonies) || p.colonies < 0) return;
+    const dilutionFactor = Math.pow(10, -p.dilution);
+    const cfu = volume > 0 ? p.colonies / (dilutionFactor * volume) : 0;
+    const inRange = p.colonies >= 30 && p.colonies <= 300;
+    if(inRange) validResults.push({...p, cfu});
+    else excludedResults.push({...p, cfu});
+  });
+
+  let outlierIds = [];
+  if(validResults.length >= 3){
+    const cfus = validResults.map(r => r.cfu).sort((a,b)=>a-b);
+    const mid = Math.floor(cfus.length/2);
+    const median = cfus.length % 2 ? cfus[mid] : (cfus[mid-1]+cfus[mid])/2;
+    validResults.forEach(r => {
+      if(median > 0 && Math.abs(r.cfu - median)/median > 0.5) outlierIds.push(r.pid);
+    });
+  }
+
+  const usedResults = validResults.filter(r => !outlierIds.includes(r.pid));
+  const avg = usedResults.length ? usedResults.reduce((a,b)=>a+b.cfu,0)/usedResults.length : null;
+
+  return {volume, validResults, excludedResults, outlierIds, usedResults, avg};
+}
+
+function calculate(){
+  const s = samples[currentId];
+  const {volume, validResults, excludedResults, outlierIds, usedResults, avg} = computeSampleResult(s);
+
+  // per-plate error/label updates
+  s.plates.forEach(p => {
+    const input = document.getElementById('colonies-' + p.pid);
+    const errorText = document.getElementById('error-' + p.pid);
+    const cfuLabel = document.getElementById('plate-cfu-' + p.pid);
+    if(!input) return;
+    input.classList.remove('error');
+    errorText.classList.remove('show');
+    cfuLabel.textContent = '';
+    if(p.colonies === null || p.colonies === undefined) return;
+    if(isNaN(p.colonies) || !Number.isInteger(p.colonies) || p.colonies < 0){
+      input.classList.add('error');
+      errorText.classList.add('show');
+      return;
+    }
+    const dilutionFactor = Math.pow(10, -p.dilution);
+    const cfu = volume > 0 ? p.colonies / (dilutionFactor * volume) : 0;
+    const inRange = p.colonies >= 30 && p.colonies <= 300;
+    let tag = '';
+    if(!inRange) tag = ' (excluded)';
+    else if(outlierIds.includes(p.pid)) tag = ' (outlier)';
+    cfuLabel.textContent = formatScientific(cfu) + (s.unit==='ml'?' CFU/mL':' CFU/g') + tag;
+  });
+
+  const unitLabel = s.unit === 'ml' ? 'CFU/mL' : 'CFU/g';
+  const resultValue = document.getElementById('resultValue');
+  const resultNote = document.getElementById('resultNote');
+  const flagsDiv = document.getElementById('flags');
+  const barsDiv = document.getElementById('bars');
+  flagsDiv.innerHTML = '';
+  barsDiv.innerHTML = '';
+
+  const anyInput = s.plates.some(p => p.colonies !== null && p.colonies !== undefined && !isNaN(p.colonies));
+
+  if(!anyInput || volume <= 0){
+    resultValue.innerHTML = `— <span class="unit">${unitLabel}</span>`;
+    resultNote.textContent = volume <= 0 ? 'Enter a valid plated amount.' : 'Enter colony counts to calculate.';
+    renderCompareTable();
+    return;
+  }
+
+  if(usedResults.length === 0){
+    resultValue.innerHTML = `— <span class="unit">${unitLabel}</span>`;
+    resultNote.textContent = 'No usable plates (either out of range or flagged as outliers).';
+    excludedResults.forEach(r => addFlag(flagsDiv, 'warn', `Plate ${r.pid} (${r.colonies} colonies) outside 30–300 range — excluded.`));
+    renderCompareTable();
+    return;
+  }
+
+  resultValue.innerHTML = `${formatScientific(avg)} <span class="unit">${unitLabel}</span>`;
+  resultNote.textContent = `Averaged from ${usedResults.length} valid plate${usedResults.length>1?'s':''} · ${s.unit==='ml' ? 'volume' : 'weight'} ${volume} ${s.unit==='ml'?'mL':'g'}`;
+
+  addFlag(flagsDiv, 'ok', `${usedResults.length} plate${usedResults.length>1?'s':''} used in final average`);
+
+  if(usedResults.length > 1){
+    const cfus = usedResults.map(r=>r.cfu);
+    const mean = avg;
+    const variance = cfus.reduce((a,b)=>a+Math.pow(b-mean,2),0)/cfus.length;
+    const cv = Math.sqrt(variance)/mean;
+    if(cv > 0.25) addFlag(flagsDiv, 'warn', `Used plates disagree by ${(cv*100).toFixed(0)}% — consider rechecking dilution accuracy.`);
+    else addFlag(flagsDiv, 'info', `Plates agree within ${(cv*100).toFixed(0)}% — good consistency.`);
+  }
+
+  excludedResults.forEach(r => addFlag(flagsDiv, 'warn', `Plate ${r.pid} (10⁻${r.dilution}, ${r.colonies} colonies) outside 30–300 range — excluded.`));
+  outlierIds.forEach(pid => {
+    const r = validResults.find(v=>v.pid===pid);
+    addFlag(flagsDiv, 'warn', `Plate ${pid} is a statistical outlier (>50% from median) — excluded from average despite being in range.`);
+  });
+
+  // bar chart across all entered plates
+  const allEntered = [...validResults, ...excludedResults].sort((a,b)=>a.pid-b.pid);
+  const barMax = Math.max(...allEntered.map(p=>p.cfu), 1);
+  allEntered.forEach(p => {
+    const excluded = excludedResults.some(e=>e.pid===p.pid);
+    const outlier = outlierIds.includes(p.pid);
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    const pct = Math.max(4, (p.cfu / barMax) * 100);
+    row.innerHTML = `
+      <span style="width:56px;">Plate ${p.pid}</span>
+      <div class="bar-track"><div class="bar-fill ${excluded ? 'excluded' : (outlier ? 'outlier' : '')}" style="width:${pct}%"></div></div>
+      <span style="width:100px; text-align:right;">${formatScientific(p.cfu)}</span>
+    `;
+    barsDiv.appendChild(row);
+  });
+
+  renderCompareTable();
+}
+
+function addFlag(container, type, text){
+  const f = document.createElement('div');
+  f.className = 'flag ' + type;
+  f.textContent = text;
+  container.appendChild(f);
+}
+
+function formatScientific(num){
+  if(num === 0) return '0';
+  const exp = Math.floor(Math.log10(Math.abs(num)));
+  const mantissa = num / Math.pow(10, exp);
+  return `${mantissa.toFixed(2)} × 10${superscript(exp)}`;
+}
+function superscript(n){
+  const map = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+  return String(n).split('').map(c => map[c] || c).join('');
+}
+
+function renderCompareTable(){
+  const compareCard = document.getElementById('compareCard');
+  const table = document.getElementById('compareTable');
+  const countLabel = document.getElementById('sampleCountLabel');
+  if(sampleOrder.length < 2){
+    compareCard.style.display = 'none';
+    return;
+  }
+  compareCard.style.display = 'block';
+  countLabel.textContent = `${sampleOrder.length} samples`;
+  let rows = `<tr><th>Sample</th><th>Unit</th><th>Result</th><th>Plates used</th></tr>`;
+  sampleOrder.forEach((id, i) => {
+    const s = samples[id];
+    const r = computeSampleResult(s);
+    const unitLabel = s.unit === 'ml' ? 'CFU/mL' : 'CFU/g';
+    const resultText = r.avg !== null ? formatScientific(r.avg) + ' ' + unitLabel : '—';
+    rows += `<tr><td>${s.name || 'Sample ' + (i+1)}</td><td>${unitLabel}</td><td>${resultText}</td><td>${r.usedResults.length}</td></tr>`;
+  });
+  table.innerHTML = rows;
+}
+
+function getSummaryText(){
+  const s = samples[currentId];
+  const r = computeSampleResult(s);
+  const unitLabel = s.unit === 'ml' ? 'CFU/mL' : 'CFU/g';
+  const resultText = r.avg !== null ? formatScientific(r.avg) + ' ' + unitLabel : 'N/A';
+  const plateLines = s.plates.filter(p=>p.colonies!==null).map(p => `  Plate ${p.pid}: ${p.colonies} colonies @ 10-${p.dilution}`).join(String.fromCharCode(10));
+  return `CFU Calculation Summary
+${s.name ? 'Sample: ' + s.name + String.fromCharCode(10) : ''}${s.unit==='ml'?'Volume':'Weight'} plated: ${s.volume} ${s.unit==='ml'?'mL':'g'}
+
+Plates:
+${plateLines}
+
+Result: ${resultText}
+`;
+}
+
+function copyResult(){
+  const text = getSummaryText();
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy result'; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+function exportCSV(){
+  let rows = [['Sample','Unit','Result (CFU)','Plates Used','Plated Amount']];
+  sampleOrder.forEach((id,i) => {
+    const s = samples[id];
+    const r = computeSampleResult(s);
+    const unitLabel = s.unit === 'ml' ? 'CFU/mL' : 'CFU/g';
+    rows.push([
+      s.name || 'Sample ' + (i+1),
+      unitLabel,
+      r.avg !== null ? r.avg.toExponential(2) : 'N/A',
+      r.usedResults.length,
+      s.volume
+    ]);
+  });
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join(String.fromCharCode(10));
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'cfu-samples-comparison.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('volume').addEventListener('input', function(){
+  samples[currentId].volume = parseFloat(this.value) || 0;
+  calculate();
+});
+
+initApp();
+</script>
+</body>
+</html>
